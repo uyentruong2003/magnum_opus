@@ -74,22 +74,43 @@ print(dfCounties.columns)
 dfZoneCounty = dfCounties[dfCounties['STATE']=='AL'][['ZONE','FIPS','COUNTY']]
 dfZoneCounty = dfZoneCounty.reset_index(drop=True)
 
-# get the county part of the full FIPS codes:
+# get the county part of the full FIPS codes (5-digit FIPS code, first 2 are state fips, last 3 are county fips):
 county_FIPS = []
 for _, row in dfZoneCounty.iterrows():
     county_FIPS.append(str(row["FIPS"])[-3:].lstrip('0'))
 
 dfZoneCounty['County_FIPS'] = county_FIPS
 dfZoneCounty = dfZoneCounty.drop('FIPS',axis=1)
-print(dfZoneCounty)
 
-# Assign the corresponding County to the zones- For Sea Levels
-dfSeaLevelsSummary = pd.merge(dfSeaLevelsSummary, dfZoneCounty[["ZONE","County_FIPS","COUNTY"]], left_on='Zone_FIPS', right_on='ZONE', how='left')
-print(dfSeaLevelsSummary)
+# Function to vlookup the corresponding county of the zone (for datasets categorized by zone instead of county)
+def ConvertZoneToCounty (df):
+    df = pd.merge(df, dfZoneCounty[["ZONE","County_FIPS","COUNTY"]], left_on='Zone_FIPS', right_on='ZONE', how='left').drop(['ZONE','Zone','Zone_FIPS'],axis=1)
+    df = df.rename(columns={"COUNTY":"County"})
+    return df
+
+# transform zone-based dfs to county-based dfs
+dfSeaLevelsSummary = ConvertZoneToCounty(dfSeaLevelsSummary)
+dfCyclonesSummary = ConvertZoneToCounty(dfCyclonesSummary)
+
+# Create a dfCounty with 67 AL counties based on the zone_county_correl df
+dfCounty = dfZoneCounty.drop("ZONE",axis=1).rename(columns = {"COUNTY":"County"}).drop_duplicates()
+dfCounty.sort_values(by="County",ascending=True,inplace=True)
+dfCounty.reset_index(drop=True, inplace=True)
+print(dfCounty)
+
+# Create the master dataset that combines all the severe weather data by county
+
+# # Check dtype of all 3 datasets
+# print("dfWinds\n",dfWindsSummary.dtypes)
+# print("\ndfSeaLevels\n",dfSeaLevelsSummary.dtypes)
+# print("\ndfCyclones\n",dfCyclonesSummary.dtypes)
+
+dfWindsSummary["County_FIPS"] = dfWindsSummary["County_FIPS"].astype(str) #County_FIPS of both datasets must be the same dtype: str
+dfMaster = pd.merge(dfCounty,dfWindsSummary.drop('County',axis=1),on="County_FIPS",how="left") # merge winds into master df
+dfMaster = pd.merge(dfMaster,dfSeaLevelsSummary.drop('County',axis=1),on="County_FIPS",how="left") # merge sea levels into master df
+dfMaster = pd.merge(dfMaster,dfCyclonesSummary.drop('County',axis=1),on="County_FIPS",how="left") # merge cyclones into master df
 
 pd.set_option('display.max_rows', None)
-dfCyclonesSummary = pd.merge(dfCyclonesSummary, dfZoneCounty[["ZONE","County_FIPS","COUNTY"]], left_on='Zone_FIPS', right_on='ZONE', how='left')
-print(dfCyclonesSummary)
+print(dfMaster.columns)
+print(dfMaster)
 pd.reset_option('display.max_rows')
-
-
