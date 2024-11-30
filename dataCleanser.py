@@ -15,64 +15,60 @@ dfPrecip = pd.DataFrame(precip).drop_duplicates()
 
 
 #This is a function to construct an aggregate table for count of events, # of deaths, injuries, and property damages
-def createAggregateTable(df_raw_data, event_type_list,loc_type,FIPS_type):
-    dfAggregate = pd.DataFrame()
-    dfAggregate[FIPS_type] = df_raw_data['CZ_FIPS']
-    dfAggregate[loc_type] = df_raw_data['CZ_NAME_STR']
-    dfAggregate.drop_duplicates(inplace=True)
-    metrics = {
-        "Count": lambda df, row, event: len(df[(df["CZ_FIPS"] == row[FIPS_type]) & (df["EVENT_TYPE"] == event)]),
-        "Deaths": lambda df, row, event: df[(df["CZ_FIPS"] == row[FIPS_type]) & (df["EVENT_TYPE"] == event)]['DEATHS_DIRECT'].sum(),
-        "Injuries": lambda df, row, event: df[(df["CZ_FIPS"] == row[FIPS_type]) & (df["EVENT_TYPE"] == event)]['INJURIES_DIRECT'].sum(),
-        "PropertyDamages": lambda df, row, event: df[(df["CZ_FIPS"] == row[FIPS_type]) & (df["EVENT_TYPE"] == event)]['DAMAGE_PROPERTY_NUM'].sum(),
-    }
+def createAggregateTable(df_raw_data,loc_type,FIPS_type):
+     # Group by FIPS code and location
+    grouped = df_raw_data.groupby(["CZ_FIPS", "CZ_NAME_STR", "EVENT_TYPE"]).agg(
+        Count=("EVENT_TYPE", "size"),
+        Deaths=("DEATHS_DIRECT", "sum"),
+        Injuries=("INJURIES_DIRECT", "sum"),
+        PropertyDamages=("DAMAGE_PROPERTY_NUM", "sum"),
+    ).reset_index()
 
-    # Initialize empty dictionaries to store results for each metric
-    results = {metric: {event: [] for event in event_type_list} for metric in metrics.keys()}
+    # Pivot the table to create separate columns for each event type and metric
+    pivoted = grouped.pivot(
+        index=["CZ_FIPS", "CZ_NAME_STR"],
+        columns="EVENT_TYPE",
+        values=["Count", "Deaths", "Injuries", "PropertyDamages"]
+    )
+    
+    # Flatten the MultiIndex columns
+    pivoted.columns = [
+        f"{event.replace(' ', '')}_{metric}" for metric, event in pivoted.columns
+    ]
+    
+    # Reset index to return a clean DataFrame
+    dfAggregate = pivoted.reset_index()
 
-    # Iterate over each row in dfAggregate
-    for _, row in dfAggregate.iterrows():
-        for event in event_type_list:
-            for metric, func in metrics.items():
-                results[metric][event].append(func(df_raw_data, row, event))
-
-    # Add results to dfAggregate
-    for metric, event_data in results.items():
-        for event, values in event_data.items():
-            column_name = f"{event.replace(' ', '')}_{metric}"
-            dfAggregate[column_name] = values
+    # Rename columns
+    dfAggregate = dfAggregate.rename(columns = {"CZ_FIPS": FIPS_type, "CZ_NAME_STR":loc_type})
 
     return dfAggregate
 
 
 # CYCLONES (zone):
-cyclone_event_types = ["Hurricane", "Tropical Storm", "Tropical Depression"]
-dfCyclonesAggregate = createAggregateTable(dfCyclones,cyclone_event_types,"Zone","Zone_FIPS")
+dfCyclonesAggregate = createAggregateTable(dfCyclones,"Zone","Zone_FIPS")
 # print(dfCyclonesAggregate.columns)
 
 
 # WINDS (county):
-wind_event_types = ["Tornado", "Thunderstorm Wind"]
-dfWindsAggregate= createAggregateTable(dfWinds, wind_event_types,"County","County_FIPS")
+dfWindsAggregate= createAggregateTable(dfWinds,"County","County_FIPS")
 # print(dfWindsAggregate.columns)
 #Including Magnitudes (EF scale for tornadoes, and knotts or Beaufort scale for thunderstorm winds)
 
-# PRECIPITATION (county):
-precip_event_types = ["Hails","Flood"]
-dfPrecipAggregate = createAggregateTable(dfPrecip,precip_event_types,"County","County_FIPS")
+# SEVERE PRECIPITATION (county):
+dfPrecipAggregate = createAggregateTable(dfPrecip,"County","County_FIPS")
 #Including Magnitudes for Hails (inches)
 # print(dfPrecipAggregate)
 
-# SEA LEVELS (zone):
-seaLevel_event_types = ["Coastal Flood","Storm Surge/Tide"]
-dfSeaLevelsAggregate= createAggregateTable(dfSeaLevels, seaLevel_event_types,"Zone","Zone_FIPS")
+# SEA LEVELS AKA COASTAL INUNDATION (zone):
+dfSeaLevelsAggregate= createAggregateTable(dfSeaLevels,"Zone","Zone_FIPS")
 # print(dfSeaLevelsAggregate)
 
 # ZONE TO COUNTY CONVERSION
-counties = pd.read_excel("county_zone_correl.xlsx")
-dfCounties = pd.DataFrame(counties)
-# print(dfCounties.columns)
-dfZoneCounty = dfCounties[dfCounties['STATE']=='AL'][['ZONE','FIPS','COUNTY']]
+cz = pd.read_excel("county_zone_correl.xlsx")
+dfCZ = pd.DataFrame(cz)
+# print(dfCZ.columns)
+dfZoneCounty = dfCZ[dfCZ['STATE']=='AL'][['ZONE','FIPS','COUNTY']]
 dfZoneCounty = dfZoneCounty.reset_index(drop=True)
 
 # get the county part of the full FIPS codes (5-digit FIPS code, first 2 are state fips, last 3 are county fips):
@@ -118,3 +114,36 @@ dfMaster = pd.merge(dfMaster,dfPrecipAggregate.drop('County',axis=1),on="County_
 # print(dfMaster.columns)
 # print(dfMaster)
 # pd.reset_option('display.max_rows')
+
+# AGGREGATE MAGNITUDE/ EF SCALES--------------------------------------------------------------------------------------------------
+# # If these tests below result in empty dataframe, it's confirmed that:
+# # ...all thunderstorm winds has a magnitude
+# print(dfWinds[dfWinds["MAGNITUDE"].isna() & dfWinds["EVENT_TYPE"]=="Thunderstorm Wind"][["CZ_NAME_STR","EVENT_TYPE", "MAGNITUDE"]])
+# # ...none of the tornadoes has a magnitude
+# print(dfWinds[dfWinds["MAGNITUDE"].notna() & dfWinds["EVENT_TYPE"]=="Tornado"][["CZ_NAME_STR","EVENT_TYPE","MAGNITUDE"]])
+# # ...all tornadoes have an F/EF scale
+# print(dfWinds[dfWinds["TOR_F_SCALE"].isna() & dfWinds["EVENT_TYPE"]=="Tornado"][["CZ_NAME_STR", "EVENT_TYPE","TOR_F_SCALE"]])
+# # ...all hails has a magnitude
+# print(dfPrecip[dfPrecip["MAGNITUDE"].isna() & dfPrecip["EVENT_TYPE"]=="Hail"][["CZ_NAME_STR", "EVENT_TYPE","MAGNITUDE"]])
+
+
+dfTornadoMagnitude = dfWinds[dfWinds["EVENT_TYPE"]=="Tornado"][["CZ_NAME_STR","CZ_FIPS","EVENT_TYPE","TOR_F_SCALE"]].rename(columns={"CZ_NAME_STR":"County","CZ_FIPS":"County_FIPS"}) #tornado F scales
+dfThunderstormWindMagnitude = dfWinds[dfWinds["EVENT_TYPE"]=="Thunderstorm Wind"][["CZ_NAME_STR","CZ_FIPS","EVENT_TYPE","MAGNITUDE"]].rename(columns={"CZ_NAME_STR":"County","CZ_FIPS":"County_FIPS"}) # thunderstorm wind magnitude (in knotts)
+dfHailMagnitude = dfPrecip[dfPrecip["EVENT_TYPE"]=="Hail"][["CZ_NAME_STR","CZ_FIPS","EVENT_TYPE","MAGNITUDE"]].rename(columns={"CZ_NAME_STR":"County","CZ_FIPS":"County_FIPS"}) # hail magnitude (in inches)
+
+dfTornadoMagnitude["MAGNITUDE"] = dfTornadoMagnitude["TOR_F_SCALE"].str[-1:] 
+dfTornadoMagnitude.loc[dfTornadoMagnitude["MAGNITUDE"] == "U", "MAGNITUDE"] = 0 #replace U from EFU (EF unknown) to 0
+dfTornadoMagnitude["MAGNITUDE"] = dfTornadoMagnitude["MAGNITUDE"].astype(float)
+dfThunderstormWindMagnitude["MAGNITUDE"] = dfThunderstormWindMagnitude["MAGNITUDE"].astype(float)
+dfHailMagnitude["MAGNITUDE"] = dfHailMagnitude["MAGNITUDE"].astype(float)
+
+print(dfCounty)
+
+def createAggregateTable(df_raw_data):
+    dfAverageMagnitude = (
+        df_raw_data.groupby(["County_FIPS", "County"], as_index=False)
+        .agg(AverageMagnitude=("MAGNITUDE", "mean"))
+    )
+    return dfAverageMagnitude
+
+print(createAggregateTable(dfTornadoMagnitude))
