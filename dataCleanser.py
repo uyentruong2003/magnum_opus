@@ -114,8 +114,8 @@ dfMasterFreq = pd.merge(dfMasterFreq,dfSeaLevelsByCounty,on=["County","County_FI
 dfMasterFreq = pd.merge(dfMasterFreq,dfCyclonesByCounty,on=["County","County_FIPS"],how="left") # merge cyclones into master df
 dfMasterFreq = pd.merge(dfMasterFreq,dfPrecipByCounty,on=["County","County_FIPS"],how="left") # merge precip into master df
 
-print(dfMasterFreq)
-dfMasterFreq.to_csv("MASTER_FILE_OF_OCCURRENCE_FREQUENCE_AND_CASUALTY_SUMMARY.csv",index=False)
+print(dfMasterFreq.columns)
+# dfMasterFreq.to_csv("MASTER_FILE_OF_OCCURRENCE_FREQUENCE_AND_CASUALTY_SUMMARY.csv",index=False)
 
 #--------------------------- Calculate the Average magnitude for Tornadoes, Th/Winds, and Hails ----------------------------------
 
@@ -154,7 +154,7 @@ dfHailMagnitude = createAggregateTable(dfHailMagnitude,"Avg_Hail_Size")
 dfMasterMag = pd.merge(dfTornadoMagnitude,dfThunderstormWindMagnitude,on=["County","County_FIPS"],how="outer")
 dfMasterMag = pd.merge(dfMasterMag,dfHailMagnitude,on=["County","County_FIPS"],how="left")
 
-print(dfMasterMag)
-dfMasterMag.to_csv("MASTER_FILE_OF_CERTAIN_EVENT_INTENSITY.csv",index=False)
+print(dfMasterMag.columns)
+# dfMasterMag.to_csv("MASTER_FILE_OF_CERTAIN_EVENT_INTENSITY.csv",index=False)
 
 #----------------------------------------------------------
