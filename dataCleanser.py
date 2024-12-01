@@ -3,15 +3,15 @@ import numpy as np
 # pd.set_option('display.max_rows', None)
 # pd.options.display.max_columns = None
 #------------------------------- READ .CSV FILES--------------------------------
-cyclones = pd.read_csv("TROPICAL_DEPRESSIONS_STORMS_AND_HURRICANES_2000_2024_ALL.csv")
+cyclones = pd.read_csv("TROPICAL_DEPRESSIONS_STORMS_AND_HURRICANES_2000_2024.csv")
 dfCyclones = pd.DataFrame(cyclones).drop_duplicates()
 dfCyclones["CZ_FIPS"] = dfCyclones["CZ_FIPS"].astype(str)
 
-winds = pd.read_csv("TORNADOES_AND_THUNDERSTORM_WINDS_2000_2024_ALL.csv")
+winds = pd.read_csv("TORNADOES_AND_THUNDERSTORM_WINDS_2000_2024.csv")
 dfWinds = pd.DataFrame(winds).drop_duplicates()
 dfWinds["CZ_FIPS"] = dfWinds["CZ_FIPS"].astype(str)
 
-seaLevels = pd.read_csv("COASTAL_FLOODS_AND_STORM_SURGE.csv")
+seaLevels = pd.read_csv("COASTAL_FLOODS_AND_STORM_SURGE_2000_2024.csv")
 dfSeaLevels = pd.DataFrame(seaLevels).drop_duplicates()
 dfSeaLevels["CZ_FIPS"] = dfSeaLevels["CZ_FIPS"].astype(str)
 
