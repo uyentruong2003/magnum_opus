@@ -109,13 +109,11 @@ dfCounty.sort_values(by="County",ascending=True,inplace=True)
 dfCounty.reset_index(drop=True, inplace=True)
 
 # Create the master dataset that combines all the severe weather data by county
-dfMasterFreq = pd.merge(dfCounty,dfWindsByCounty,on=["County","County_FIPS"],how="left") # merge winds into master df
-dfMasterFreq = pd.merge(dfMasterFreq,dfSeaLevelsByCounty,on=["County","County_FIPS"],how="left") # merge sea levels into master df
-dfMasterFreq = pd.merge(dfMasterFreq,dfCyclonesByCounty,on=["County","County_FIPS"],how="left") # merge cyclones into master df
-dfMasterFreq = pd.merge(dfMasterFreq,dfPrecipByCounty,on=["County","County_FIPS"],how="left") # merge precip into master df
+dfMaster = pd.merge(dfCounty,dfWindsByCounty,on=["County","County_FIPS"],how="left") # merge winds into master df
+dfMaster = pd.merge(dfMaster,dfSeaLevelsByCounty,on=["County","County_FIPS"],how="left") # merge sea levels into master df
+dfMaster = pd.merge(dfMaster,dfCyclonesByCounty,on=["County","County_FIPS"],how="left") # merge cyclones into master df
+dfMaster = pd.merge(dfMaster,dfPrecipByCounty,on=["County","County_FIPS"],how="left") # merge precip into master df
 
-print(dfMasterFreq.columns)
-# dfMasterFreq.to_csv("MASTER_FILE_OF_OCCURRENCE_FREQUENCE_AND_CASUALTY_SUMMARY.csv",index=False)
 
 #--------------------------- Calculate the Average magnitude for Tornadoes, Th/Winds, and Hails ----------------------------------
 
@@ -151,10 +149,11 @@ dfTornadoMagnitude = createAggregateTable(dfTornadoMagnitude,"Avg_Tor_EF")
 dfThunderstormWindMagnitude = createAggregateTable(dfThunderstormWindMagnitude,"Avg_ThWind_Speed")
 dfHailMagnitude = createAggregateTable(dfHailMagnitude,"Avg_Hail_Size")
 
-dfMasterMag = pd.merge(dfTornadoMagnitude,dfThunderstormWindMagnitude,on=["County","County_FIPS"],how="outer")
-dfMasterMag = pd.merge(dfMasterMag,dfHailMagnitude,on=["County","County_FIPS"],how="left")
+dfMaster = pd.merge(dfMaster,dfHailMagnitude,on=["County","County_FIPS"],how="left")
+dfMaster = pd.merge(dfMaster,dfThunderstormWindMagnitude,on=["County","County_FIPS"],how="left")
+dfMaster = pd.merge(dfMaster,dfTornadoMagnitude,on=["County","County_FIPS"],how="left")
 
-print(dfMasterMag.columns)
-# dfMasterMag.to_csv("MASTER_FILE_OF_CERTAIN_EVENT_INTENSITY.csv",index=False)
+print(dfMaster.columns)
+dfMaster.to_csv("MASTER_FILE_OF_SEVERE_WEATHER_INTENSITY_AND_FREQUENCY.csv",index=False)
 
 #----------------------------------------------------------
