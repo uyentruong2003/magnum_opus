@@ -1,5 +1,5 @@
 import pandas as pd
-from xlsxwriter import workbook
+import os
 
 #---------------------------------SUMMARIZE DATA BY STAT----------------------------------
 # Get column names from the first cluster file
@@ -46,16 +46,28 @@ for cluster in clusters:
         all_stats["quantile_75"][cluster][col] = data[col].quantile(0.75)
 
 # Create DataFrames and save to CSV
+all_stats_csv = []
 for stat in stats:
     # Create DataFrames
     df_stat = pd.DataFrame.from_dict(all_stats[stat], orient="index")
+    all_stats_csv.append(f"data_by_stat/{stat}.csv")
     
     # Save to separate CSV
     # df_stat.to_csv(f"data_by_stat/{stat}.csv", index=True)
     
-    # Compile all stats into multiple sheets of the same Excel workbook
-    with pd.ExcelWriter("data_by_stat/All_STATS.xlsx", engine="xlsxwriter") as writer:
-        df_stat.to_excel(writer, sheet_name=f"{stat}", index=False)
+# Compile all stats into multiple sheets of the same Excel workbook
+
+with pd.ExcelWriter('data_by_stat/ALL_STATS.xlsx', engine='openpyxl') as writer:
+    for csv_file in all_stats_csv:
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(csv_file)
+        
+        # Use the file name (without extension) as the sheet name
+        sheet_name = os.path.splitext(os.path.basename(csv_file))[0]
+        
+        # Write the DataFrame to the specified sheet
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
     
 #---------------------------------SUMMARIZE DATA BY CLUSTER----------------------------------
 # for id in range(1,11):
