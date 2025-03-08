@@ -43,7 +43,7 @@ cluster_ids = df['Cluster'].unique()
 # Save counties to csv by cluster
 for id in cluster_ids:
     filtered = df[df['Cluster'] == id] #filter by cluster
-    file_name = f"cluster_{id}.csv" #dynamic naming
+    file_name = f"clusters/cluster_{id}.csv" #dynamic naming
     filtered.to_csv(file_name, index=False) #save to csv   
 
 
