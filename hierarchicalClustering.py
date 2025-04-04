@@ -39,35 +39,15 @@ df['Cluster'] = clusters #add the col 'Cluster' indicating the cluster each coun
 # get the unique cluster_id
 cluster_ids = df['Cluster'].unique()
 
-# loop thru the unique_ids and filter df by cluster.
-# Save counties to csv by cluster
-for id in cluster_ids:
-    filtered = df[df['Cluster'] == id] #filter by cluster
-    file_name = f"clusters/cluster_{id}.csv" #dynamic naming
-    filtered.to_csv(file_name, index=False) #save to csv   
-
-
-# Plot Cluster Map
-# Create a DataFrame for the heatmap with counties as row labels
-# clustered_df = pd.DataFrame(scaled_data, index=df['County'], columns=cols_pre_clustering)
-
-# # Plot using seaborn's clustermap
-# sns.clustermap(
-#     clustered_df,
-#     method='ward',  # Linkage method
-#     metric='euclidean',  # Distance metric
-#     figsize=(12, 10),
-#     cmap='viridis',  # Color map
-#     standard_scale=1,  # Normalize data (columns)
-#     row_cluster=True,  # Enable row clustering
-#     col_cluster=False  # Disable column clustering to focus on counties
-# )
-
-# plt.title('Cluster Map of Alabama Counties')
-# plt.show()
+# # loop thru the unique_ids and filter df by cluster.
+# # Save counties to csv by cluster
+# for id in cluster_ids:
+#     filtered = df[df['Cluster'] == id] #filter by cluster
+#     file_name = f"clusters/cluster_{id}.csv" #dynamic naming
+#     filtered.to_csv(file_name, index=False) #save to csv   
 
 
 
-# # Save or inspect results
-# df.to_csv('clustered_counties.csv', index=False)
-# print(df[['County', 'Cluster']].head())
+# Save or inspect results
+df.to_csv('MASTER_FILE_COUNTY_CLUSTERS.csv', index=False)
+print(df[['County', 'Cluster']].head())
