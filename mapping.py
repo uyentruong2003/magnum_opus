@@ -1,15 +1,22 @@
 import geopandas as gpd
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 # Load Alabama county shapefile
 shapefile_path = r"C:\Users\uyenk\OneDrive - The University of Alabama\Self-learning Programming\magnum_opus\al_geo\tl_2021_01_cousub.shp"
 gdf = gpd.read_file(shapefile_path)
+print(gdf.columns)
+print(gdf.head())
 print(gdf[['COUNTYFP']])
+gdf = gdf.dissolve(by='COUNTYFP')
 
 # Load data
 data_df = pd.read_csv(r"C:\Users\uyenk\OneDrive - The University of Alabama\Self-learning Programming\magnum_opus\MASTER_FILE_COUNTY_CLUSTERS.csv")
 print(data_df.columns)
+
+# Dissolve subdivisions into counties
+
 
 
 # # Ensure County_FIPS is treated as a string
@@ -49,19 +56,42 @@ def plotDataByCounty(data_col,mapStyling):
 
     # Merge data:
     plot_gdf = gdf.merge(filtered_df, on="COUNTYFP", how="left").fillna(0)
-
+    
+    # Custom color if plot map by clusters
+    # customColors = ["red", "blue", "magenta", "lime", "green",
+    #       "orange", "purple", "yellow", "cyan", "brown"]
+    
+    tab10_colors = [
+    "#1f77b4",  # blue
+    "#ff7f0e",  # orange
+    "#2ca02c",  # green
+    "#d62728",  # red
+    "#9467bd",  # purple
+    "#8c564b",  # brown
+    "#e377c2",  # pink
+    "#7f7f7f",  # gray
+    "#bcbd22",  # yellow-green
+    "#17becf"   # cyan
+    ]
+    
     # Plot the map
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-    plot_gdf.plot(column=data_col, cmap=mapStyling, linewidth=0.8, edgecolor="black", legend=True, ax=ax)
+    if data_col == "Cluster":
+        plot_gdf.plot(column=data_col, cmap=ListedColormap(tab10_colors), linewidth=0.8, edgecolor="black", legend=True, ax=ax)
+    else:
+        plot_gdf.plot(column=data_col, cmap=mapStyling, linewidth=0.8, edgecolor="black", legend=True, ax=ax)
     ax.set_title(f"{data_col} by county")
     plt.axis("off")
     plt.show()
 
 
-# plot data metrics by county
+# # plot data metrics by county
 data_df = transformCountyFIPS(data_df)
-# plotDataByCounty("Hail_Count", "Greens")
-plotDataByCounty("Cluster", "tab10")
+
+
+
+plotDataByCounty("Tornado_Count","YlOrBr")
+# plotDataByCounty("Cluster", "tab10")
 
 
 
