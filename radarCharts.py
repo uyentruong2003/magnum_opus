@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # meanCountClusterData for 10 clusters
 
@@ -12,37 +13,37 @@ consolidated_df = raw_data_df[["Tornado_Count","ThunderstormWind_Count",
 
 consolidated_df.fillna(0, inplace=True)
 
-#normalize data in range 0-1:
-consolidated_df = (consolidated_df - consolidated_df.min()) / (consolidated_df.max() - consolidated_df.min())
-consolidated_df = consolidated_df.copy()
-consolidated_df["Cluster"]=[f'Cluster {i+1}' for i in range(10)]
+#normalization: cluster data is scaled in range 0-1 by weather type
+normalized_df = (consolidated_df - consolidated_df.min()) / (consolidated_df.max() - consolidated_df.min())
+normalized_df = normalized_df.copy()
+normalized_df["Cluster"]=[f'Cluster {i+1}' for i in range(10)]
 
 def get_cluster_dict(index):
     return {
-        'Cluster': [consolidated_df["Cluster"][index]],
-        'Tornadoes': [consolidated_df["Tornado_Count"][index]],
-        'Thunderstorm Winds': [consolidated_df["ThunderstormWind_Count"][index]],
-        'Storm Tide/Surge': [consolidated_df["StormSurge/Tide_Count"][index]],
-        'Coastal Flood': [consolidated_df["CoastalFlood_Count"][index]],
-        'Hail': [consolidated_df["Hail_Count"][index]],
-        'Flood': [consolidated_df["Flood_Count"][index]],
-        'Tropical Depressions': [consolidated_df["TropicalDepression_Count"][index]],
-        'Tropical Storms': [consolidated_df["TropicalStorm_Count"][index]],
-        'Hurricane': [consolidated_df["Hurricane_Count"][index]]
+        'Cluster': [normalized_df["Cluster"][index]],
+        'Tornadoes': [normalized_df["Tornado_Count"][index]],
+        'Thunderstorm Winds': [normalized_df["ThunderstormWind_Count"][index]],
+        'Storm Tide/Surge': [normalized_df["StormSurge/Tide_Count"][index]],
+        'Coastal Flood': [normalized_df["CoastalFlood_Count"][index]],
+        'Hail': [normalized_df["Hail_Count"][index]],
+        'Flood': [normalized_df["Flood_Count"][index]],
+        'Tropical Depressions': [normalized_df["TropicalDepression_Count"][index]],
+        'Tropical Storms': [normalized_df["TropicalStorm_Count"][index]],
+        'Hurricane': [normalized_df["Hurricane_Count"][index]]
     }
 
 def get_all_clusters_dict():
     return{
-    'Cluster': consolidated_df["Cluster"],
-    'Tornadoes': consolidated_df["Tornado_Count"],
-    'Thunderstorm Winds': consolidated_df["ThunderstormWind_Count"],
-    'Storm Tide/Surge': consolidated_df["StormSurge/Tide_Count"],
-    'Coastal Flood': consolidated_df["CoastalFlood_Count"],
-    'Hail': consolidated_df["Hail_Count"],
-    'Flood': consolidated_df["Flood_Count"],
-    'Tropical Depressions': consolidated_df["TropicalDepression_Count"],
-    'Tropical Storms': consolidated_df["TropicalStorm_Count"],
-    'Hurricane': consolidated_df["Hurricane_Count"]
+    'Cluster': normalized_df["Cluster"],
+    'Tornadoes': normalized_df["Tornado_Count"],
+    'Thunderstorm Winds': normalized_df["ThunderstormWind_Count"],
+    'Storm Tide/Surge': normalized_df["StormSurge/Tide_Count"],
+    'Coastal Flood': normalized_df["CoastalFlood_Count"],
+    'Hail': normalized_df["Hail_Count"],
+    'Flood': normalized_df["Flood_Count"],
+    'Tropical Depressions': normalized_df["TropicalDepression_Count"],
+    'Tropical Storms': normalized_df["TropicalStorm_Count"],
+    'Hurricane': normalized_df["Hurricane_Count"]
 }
 
 
@@ -71,7 +72,7 @@ def plot_all_clusters(df,colors):
     ax.set_xticklabels(labels, fontsize=12)
     
     # Optional: set y-labels and limits
-    ax.set_title("Radar Chart: Hazard Attributes per Cluster", size=16, y=1.1)
+    ax.set_title("Radar Chart: Dominant Severe Weather Across Clusters\nBased On Normalized Average Count of Occurrence", size=16, y=1.1)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     
     plt.tight_layout()
@@ -134,3 +135,4 @@ plot_all_clusters(all_dfs, colors)
 # for i in range(0,10):
 #     single_df = pd.DataFrame(get_cluster_dict(i))
 #     plot_one_cluster(single_df, colors[i], f"plots/Cluster{i+1}_radarChart.png")
+

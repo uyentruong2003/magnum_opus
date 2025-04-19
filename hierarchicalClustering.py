@@ -49,5 +49,5 @@ cluster_ids = df['Cluster'].unique()
 
 
 # Save or inspect results
-df.to_csv('MASTER_FILE_COUNTY_CLUSTERS.csv', index=False)
-print(df[['County', 'Cluster']].head())
+# df.to_csv('MASTER_FILE_COUNTY_CLUSTERS.csv', index=False)
+# print(df[['County', 'Cluster']].head())
