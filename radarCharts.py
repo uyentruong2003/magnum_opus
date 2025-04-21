@@ -48,72 +48,104 @@ def get_all_clusters_dict():
 
 
 # Radar chart setup
-def plot_all_clusters(df,colors):
+def plot_all_clusters(df, colors):
     labels = df.columns[1:]
     num_vars = len(labels)
-    
     
     # Create angle values
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
     angles += angles[:1]  # Complete the loop
     
-    # Initialize plot
-    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+    num_clusters = len(df)
+    rows, cols = 2, 5  # Fixed layout: 2 rows x 5 columns
     
-    # Plot each cluster
-    for i in range(len(df)):
+    # Create subplots
+    fig, axs = plt.subplots(rows, cols, subplot_kw=dict(polar=True), figsize=(20, 10))
+    axs = axs.flatten()  # Flatten in case of 2D array
+
+    for i in range(num_clusters):
         values = df.iloc[i, 1:].tolist()
         values += values[:1]  # Complete the loop
-        ax.plot(angles, values, label=df['Cluster'][i], color=colors[i], linewidth=2)
-        ax.fill(angles, values, alpha=0.3, color=colors[i])
+
+        ax = axs[i]
+        
+        ax.plot(angles, values, color=colors[i], linewidth=1, linestyle='--', marker='o', markersize=4)
+        ax.fill(angles, values, alpha=0.3, color=colors[i])  # Optional
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(labels, fontsize=9)
+        ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.set_title(f"Cluster {df['Cluster'][i]}", size=10, y=1.1)
+
+    # Hide any unused subplots (just in case)
+    for j in range(num_clusters, len(axs)):
+        fig.delaxes(axs[j])
     
-    # Add labels
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels, fontsize=12)
-    
-    # Optional: set y-labels and limits
-    ax.set_title("Radar Chart: Dominant Severe Weather Across Clusters\nBased On Normalized Average Count of Occurrence", size=16, y=1.1)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
-    
+    fig.suptitle("Radar Charts by Cluster\nNormalized Average Count of Severe Weather Types", size=16, y=1.02)
     plt.tight_layout()
+    # plt.subplots_adjust(top=0.95)  # Adjust spacing to make room for the main title
     plt.savefig("plots/allClusters_radarCharts.png", bbox_inches='tight', dpi=300)
     plt.show()
 
-def plot_one_cluster(df, color, save_path=None):
-    labels = df.columns[1:]
-    num_vars = len(labels)
+# def plot_one_cluster(df, color, save_path=None):
+#     labels = df.columns[1:]
+#     num_vars = len(labels)
     
-    # Create angle values
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-    angles += angles[:1]  # Complete the loop
+#     # Create angle values
+#     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+#     angles += angles[:1]  # Complete the loop
     
-    # Initialize plot
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+#     # Initialize plot
+#     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
     
-    # Plot the cluster
-    values = df.iloc[0, 1:].tolist()
-    values += values[:1]
-    ax.plot(angles, values, label=df['Cluster'][0], color=color, linewidth=2)
-    ax.fill(angles, values, alpha=0.3, color=color)
+#     # Plot the cluster
+#     values = df.iloc[0, 1:].tolist()
+#     values += values[:1]
+#     ax.plot(angles, values, label=df['Cluster'][0], color=color, linewidth=2)
+#     ax.fill(angles, values, alpha=0.3, color=color)
     
-    # Add category labels
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels, fontsize=12)
-    ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
-    ax.set_yticklabels(['0.2', '0.4', '0.6', '0.8', '1.0'], fontsize=10)
+#     # Add category labels
+#     ax.set_xticks(angles[:-1])
+#     ax.set_xticklabels(labels, fontsize=12)
+#     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+#     ax.set_yticklabels(['0.2', '0.4', '0.6', '0.8', '1.0'], fontsize=10)
     
-    # Add title and legend
-    ax.set_title(f"Radar Chart - {df['Cluster'][0]}", size=16, y=1.1)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
+#     # Add title and legend
+#     ax.set_title(f"Radar Chart - {df['Cluster'][0]}", size=16, y=1.1)
+#     ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
     
-    plt.tight_layout()
+#     plt.tight_layout()
     
     # Save the figure if a path is given
-    if save_path:
-        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    # if save_path:
+    #     plt.savefig(save_path, bbox_inches='tight', dpi=300)
     
-    plt.show()
+    # plt.show()
 
+# def plot_radar_chart(metric, df):
+    # # Setup
+    # labels = df.columns.astype(str)  # Cluster numbers
+    # angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+    # angles += angles[:1]  # close the loop
+    
+    # # Create radar charts
+    # fig, axs = plt.subplots(2, 5, subplot_kw=dict(polar=True), figsize=(20, 10))
+    # axs = axs.flatten()
+    
+    # for i, (weather_type, row) in enumerate(df.iterrows()):
+    #     values = row.tolist()
+    #     values += values[:1]  # close the loop
+    #     ax = axs[i]
+    #     ax.plot(angles, values, linewidth=2, label=weather_type)
+    #     ax.fill(angles, values, alpha=0.25)
+    #     ax.set_title(weather_type, size=12)
+    #     ax.set_xticks(angles[:-1])
+    #     ax.set_xticklabels(labels)
+    #     ax.set_yticklabels([])
+    
+    # plt.tight_layout()
+    # plt.suptitle(f"Radar Charts: Severe Weather Prevalence Across Clusters", fontsize=16, y=1.02)
+    # plt.show()
 
 colors = [
 "#1f77b4",  # blue
@@ -129,6 +161,7 @@ colors = [
 ]
 # Plot all the clusters
 all_dfs = pd.DataFrame(get_all_clusters_dict())
+print(all_dfs)
 plot_all_clusters(all_dfs, colors)
 
 # Plot 1 cluster at a time

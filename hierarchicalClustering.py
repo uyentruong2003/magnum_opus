@@ -4,7 +4,10 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
+
+
 
 
 # Load data
@@ -38,6 +41,58 @@ clusters = fcluster(linkage_matrix, t=distance_threshold, criterion='distance')
 df['Cluster'] = clusters #add the col 'Cluster' indicating the cluster each county belongs to
 # get the unique cluster_id
 cluster_ids = df['Cluster'].unique()
+
+
+# Reduce to 3 components
+pca = PCA(n_components=3)
+X_3d = pca.fit_transform(scaled_data)
+
+# Add PCA components to the DataFrame
+df['PCA1'] = X_3d[:, 0]
+df['PCA2'] = X_3d[:, 1]
+df['PCA3'] = X_3d[:, 2]
+
+# 3D Scatter plot
+fig = plt.figure(figsize=(12, 9))
+ax = fig.add_subplot(111, projection='3d')
+scatter = ax.scatter(df['PCA1'], df['PCA2'], df['PCA3'], c=df['Cluster'], cmap='tab10', s=50)
+
+ax.set_title('Hierarchical Clustering Visualization (3D PCA)')
+ax.set_xlabel('PCA Component 1')
+ax.set_ylabel('PCA Component 2')
+ax.set_zlabel('PCA Component 3')
+
+# Optional: Add legend for clusters
+legend = ax.legend(*scatter.legend_elements(), title="Clusters", loc='upper left')
+ax.add_artist(legend)
+
+plt.tight_layout()
+plt.show()
+
+
+# Reduce to 2D using PCA
+# pca = PCA(n_components=2)
+# X_2d = pca.fit_transform(scaled_data)
+
+# # Add the 2D coordinates to the DataFrame
+# df['PCA1'] = X_2d[:, 0]
+# df['PCA2'] = X_2d[:, 1]
+
+# # Plot the clusters
+# plt.figure(figsize=(12, 8))
+# scatter = plt.scatter(df['PCA1'], df['PCA2'], c=df['Cluster'], cmap='tab10', s=60)
+            
+# plt.title('Hierarchical Clustering Visualization (PCA-reduced)')
+# plt.xlabel('PCA Component 1')
+# plt.ylabel('PCA Component 2')
+
+# # Optional: add a legend for cluster IDs
+# legend1 = plt.legend(*scatter.legend_elements(), title="Clusters", bbox_to_anchor=(1.05, 1), loc='upper left')
+# plt.gca().add_artist(legend1)
+
+# plt.tight_layout()
+# plt.show()
+
 
 # # loop thru the unique_ids and filter df by cluster.
 # # Save counties to csv by cluster
